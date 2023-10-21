@@ -8,37 +8,63 @@ public class Main {
 
     public static void main(String[] args) {
         ArrayList<Vertex> graph = createGraph();
-        for(Vertex v : graph) v.initializePathInformation();
+        bellmanFord(graph, true);
+        System.out.println("Testing routing...");
+        Vertex z = get(graph, "z");
+        z.route("test message", get(graph, "t"), 0.0);
+        System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+        z = new Vertex("z");
+        Vertex x = new Vertex("x"), y = new Vertex("y");
+        Vertex.updateLinkCost(y, z, 1);
+        Vertex.updateLinkCost(y, x, 4);
+        Vertex.updateLinkCost(x, z, 50);
+        graph.clear();
+        graph.add(x);
+        graph.add(y);
+        graph.add(z);
+        bellmanFord(graph, true);
+        Vertex.updateLinkCost(y, x, 60);
+        System.out.println("After x <--> y changes from 4 to 60...");
+        bellmanFord(graph, false);
+        printStates(graph);
+        y.update(z);
+        System.out.println("After z sends message to y...");
+        printStates(graph);
+    }
+
+    public static void bellmanFord(ArrayList<Vertex> graph, boolean initializeVertices) {
+        if(initializeVertices) for(Vertex v : graph) v.initializePathInformation();
         boolean updated = true;
         int i = 0;
         while(updated) {  //In practice, this algorithm never needs to terminate...
-                    //a vertex would only send its distance vector to its neighbors
-                    //when its own distance vector changes.  For simplicity,
-                    //this demonstration forces convergence by disallowing a vertex
-                    //to send multiple update messages until all other vertices have
-                    //updated their neighbors (i.e., it uses iterations in which each
-                    //vertex sends its current distance vector to each of its
-                    //neighbors.
+            //a vertex would only send its distance vector to its neighbors
+            //when its own distance vector changes.  For simplicity,
+            //this demonstration forces convergence by disallowing a vertex
+            //to send multiple update messages until all other vertices have
+            //updated their neighbors (i.e., it uses iterations in which each
+            //vertex sends its current distance vector to each of its
+            //neighbors.
             System.out.println("After " + i + " iterations: ");
-            for(Vertex v : graph) {  //print out current distance vectors and routing information.
-                System.out.println("\t" + v + ": " + v.distances);
-                System.out.println("\t" + v + ": " + v.next);
-                System.out.println();
-            }
+            printStates(graph);
             updated = false;
             Collections.shuffle(graph);  //demonstrating the decentralized nature of the algorithm:
-                    //vertices do not need to coordinate WHEN they do their updates...
+            //vertices do not need to coordinate WHEN they do their updates...
             for(Vertex v : graph) {
                 for(Vertex u : v.neighbors.keySet()) {  //update ALL of v's neighbors.
                     updated = u.update(v) || updated;  //u is receiving a message from v and updating
-                            // its distance vector accordingly.
+                    // its distance vector accordingly.
                 }
             }
             i++;
         }
-        System.out.println("Testing routing...");
-        Vertex z = get(graph, "z");
-        z.route("test message", get(graph, "t"), 0.0);
+    }
+
+    public static void printStates(ArrayList<Vertex> graph) {
+        for(Vertex v : graph) {  //print out current distance vectors and routing information.
+            System.out.println("\t" + v + ": " + v.distances);
+            System.out.println("\t" + v + ": " + v.next);
+            System.out.println();
+        }
     }
 
     //This method creates and returns the graph from the quiz 5+6
@@ -52,18 +78,18 @@ public class Main {
         Vertex u = new Vertex("u");
         Vertex t = new Vertex("t");
         Vertex w = new Vertex("w");
-        Vertex.connect(z, y, 12);
-        Vertex.connect(z, x, 8);
-        Vertex.connect(y, x, 6);
-        Vertex.connect(y, v, 8);
-        Vertex.connect(y, t, 7);
-        Vertex.connect(x, w, 6);
-        Vertex.connect(x, v, 3);
-        Vertex.connect(v, t, 4);
-        Vertex.connect(v, u, 3);
-        Vertex.connect(v, w, 4);
-        Vertex.connect(w, u, 3);
-        Vertex.connect(u, t, 2);
+        Vertex.updateLinkCost(z, y, 12);
+        Vertex.updateLinkCost(z, x, 8);
+        Vertex.updateLinkCost(y, x, 6);
+        Vertex.updateLinkCost(y, v, 8);
+        Vertex.updateLinkCost(y, t, 7);
+        Vertex.updateLinkCost(x, w, 6);
+        Vertex.updateLinkCost(x, v, 3);
+        Vertex.updateLinkCost(v, t, 4);
+        Vertex.updateLinkCost(v, u, 3);
+        Vertex.updateLinkCost(v, w, 4);
+        Vertex.updateLinkCost(w, u, 3);
+        Vertex.updateLinkCost(u, t, 2);
         answer.add(t);
         answer.add(u);
         answer.add(v);
@@ -86,6 +112,7 @@ class Vertex {
     HashMap<Vertex, Double> neighbors = new HashMap<Vertex, Double>();  //the neighbors of this vertex (undirected edges)
     HashMap<Vertex, Double> distances = new HashMap<Vertex, Double>(); //distance vector for this vertex.
     HashMap<Vertex, Vertex> next = new HashMap<Vertex, Vertex>(); //routing information (where to send a message after this vertex when following the shortest path)
+    boolean active = false;
 
     //creates a vertex.
     public Vertex(String id) {
@@ -93,9 +120,21 @@ class Vertex {
     }
 
     //adds a bidirectional (undirected) edge (link) between two vertices of the given weight.
-    public static void connect(Vertex x, Vertex y, double weight) {
+    //if weight is infinity, removes the edge (link) between two vertices.
+    public static void updateLinkCost(Vertex x, Vertex y, double weight) {
+        double xOldWeight = -1, yOldWeight = -1;
+        if(weight == Double.POSITIVE_INFINITY) {
+            x.neighbors.remove(y);
+            y.neighbors.remove(x);
+            x.distances.remove(y);
+            y.distances.remove(x);
+            x.next.remove(y);
+            y.next.remove(x);
+        }
         x.neighbors.put(y, weight);
         y.neighbors.put(x, weight);
+        x.distances.put(y, weight);
+        y.distances.put(x, weight);
     }
 
     //initializes distance vector and routing information to start a version of Bellman-Ford.
