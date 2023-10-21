@@ -35,7 +35,11 @@ public class Main {
     //Notably different from RIP (Bellman Ford as implemented in networking).
     //That algorithm has extra messages + specific rules for how messages
     //can be broadcast to reduce/eliminate issues like the "count to infinity"
-    //problem.
+    //problem.  Additionally, RIP only uses recently computed routes.  This
+    //makes sense because the network topology is constantly changing.
+    //Without these timeouts, the routing protocol can't handle changes in
+    //network topology because a node with a short path would never discard
+    //that route information in favor of a longer path.
     public static void bellmanFord(ArrayList<Vertex> graph, boolean initializeVertices) {
         if(initializeVertices) for(Vertex v : graph) v.initializePathInformation();
         boolean updated = true;
