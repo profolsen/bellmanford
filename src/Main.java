@@ -44,6 +44,11 @@ public class Main {
     //(Also though it demonstrates the issue that leads to the
     //"count-to-infinity" problem, it ends up with just incorrect routes
     //and a cycle in routing instead).
+    //sources & further reading:
+    //1. https://www.rfc-editor.org/rfc/rfc2453.html#page-3
+    //2. https://en.wikipedia.org/wiki/Routing_Information_Protocol#RIP_version_1
+    //3. https://en.wikipedia.org/wiki/Split_horizon_route_advertisement
+    //...etc.
     public static void bellmanFord(ArrayList<Vertex> graph, boolean initializeVertices) {
         if(initializeVertices) for(Vertex v : graph) v.initializePathInformation();
         boolean updated = true;
