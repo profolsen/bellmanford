@@ -39,7 +39,11 @@ public class Main {
     //makes sense because the network topology is constantly changing.
     //Without these timeouts, the routing protocol can't handle changes in
     //network topology because a node with a short path would never discard
-    //that route information in favor of a longer path.
+    //that route information in favor of a longer path. Therefore, this
+    //implementation cannot handle arbitrary changes in network topology
+    //(Also though it demonstrates the issue that leads to the
+    //"count-to-infinity" problem, it ends up with just incorrect routes
+    //and a cycle in routing instead).
     public static void bellmanFord(ArrayList<Vertex> graph, boolean initializeVertices) {
         if(initializeVertices) for(Vertex v : graph) v.initializePathInformation();
         boolean updated = true;
