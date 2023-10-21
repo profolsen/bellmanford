@@ -32,6 +32,10 @@ public class Main {
         printStates(graph);
     }
 
+    //Notably different from RIP (Bellman Ford as implemented in networking).
+    //That algorithm has extra messages + specific rules for how messages
+    //can be broadcast to reduce/eliminate issues like the "count to infinity"
+    //problem.
     public static void bellmanFord(ArrayList<Vertex> graph, boolean initializeVertices) {
         if(initializeVertices) for(Vertex v : graph) v.initializePathInformation();
         boolean updated = true;
@@ -50,6 +54,7 @@ public class Main {
             Collections.shuffle(graph);  //demonstrating the decentralized nature of the algorithm:
             //vertices do not need to coordinate WHEN they do their updates...
             for(Vertex v : graph) {
+                System.out.println(v + " broadcasting...");
                 for(Vertex u : v.neighbors.keySet()) {  //update ALL of v's neighbors.
                     updated = u.update(v) || updated;  //u is receiving a message from v and updating
                     // its distance vector accordingly.
